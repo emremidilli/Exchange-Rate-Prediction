@@ -8,7 +8,7 @@ import torch
 
 from utils import filter_relevant_time_idx, get_converted_data, \
     get_timestamps, convert_to_time_series_dataset, filter_dataset, \
-    get_dataloaders, get_training_args
+    get_dataloaders, get_training_args, get_data_format_config
 
 
 if __name__ == '__main__':
@@ -16,23 +16,25 @@ if __name__ == '__main__':
     CONVERTED_PARENT_DIR = '../tsf-bin/01 - Converted Data'
     TRAINING_PARENT_DIR = '../tsf-bin/02 - Training Datasets'
     ARTIFACTS_PARENT_DIR = '../tsf-bin/04 - Artifacts'
-    FORECAST_HORIZON = 120
-    LOOKBACK_HORIZON = 480
 
-    CHANNEL = input(f'Enter a channel name from {TRAINING_PARENT_DIR}: \n')
+    CHANNEL = args.channel
+    MODEL_TYPE = args.model_type
 
     TRAINING_DATA_DIR = os.path.join(TRAINING_PARENT_DIR, CHANNEL)
     CONVERTED_DATA_DIR = os.path.join(
         CONVERTED_PARENT_DIR,
         f'{CHANNEL}.csv')
-    LOGS_DIR = os.path.join(ARTIFACTS_PARENT_DIR, CHANNEL, args.model_type)
+    LOGS_DIR = os.path.join(ARTIFACTS_PARENT_DIR, CHANNEL, MODEL_TYPE)
     ARTIFACTS_DIR = os.path.join(
-        ARTIFACTS_PARENT_DIR,
-        CHANNEL,
-        args.model_type,
+        LOGS_DIR,
         'saved_model',
-        'model.pth'
-        )
+        'model.pth')
+
+    config = get_data_format_config(
+        folder_path=TRAINING_DATA_DIR)
+
+    FORECAST_HORIZON = config['forecast_horizon']
+    LOOKBACK_HORIZON = FORECAST_HORIZON * config['lookback_coefficient']
 
     ts_train, ts_test = get_timestamps(TRAINING_DATA_DIR)
     df_data = get_converted_data(CONVERTED_DATA_DIR)
@@ -54,7 +56,7 @@ if __name__ == '__main__':
         df_test=df_test,
         lookback_horizon=LOOKBACK_HORIZON,
         forecast_horizon=FORECAST_HORIZON,
-        model_type=args.model_type
+        model_type=MODEL_TYPE
     )
 
     filter_dataset(
@@ -78,7 +80,7 @@ if __name__ == '__main__':
     )
 
     model = get_model(
-        model_type=args.model_type,
+        model_type=MODEL_TYPE,
         ds=ds_train)
     print(f"Number of parameters in network: {model.size()/1e3:.1f}k")
 
@@ -93,5 +95,3 @@ if __name__ == '__main__':
     torch.save(
         model.state_dict(),
         ARTIFACTS_DIR)
-
-    print('Training completed successfully.')

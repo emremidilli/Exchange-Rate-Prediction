@@ -17,10 +17,10 @@ def get_tft_model(ds):
     model = TemporalFusionTransformer.from_dataset(
         ds,
         learning_rate=1e-3,
-        hidden_size=16,
-        attention_head_size=2,
+        hidden_size=128,
+        attention_head_size=4,
         dropout=0.1,
-        hidden_continuous_size=8,
+        hidden_continuous_size=128,
         loss=QuantileLoss(),
         log_interval=10,
         optimizer='Adam',
@@ -34,10 +34,11 @@ def get_nbeats_model(ds):
 
     model = NBeats.from_dataset(
         ds,
+        num_blocks=[4, 4],
         learning_rate=1e-3,
         log_interval=10,
         log_val_interval=1,
-        widths=[32, 512],
+        widths=[128, 128, 128, 128],
         optimizer='Adam',
         backcast_loss_ratio=1.0)
 
@@ -52,6 +53,8 @@ def get_nhits_model(ds):
         learning_rate=1e-3,
         log_interval=10,
         log_val_interval=1,
+        n_blocks=[1, 1, 1, 1],
+        hidden_size=128,
         optimizer='Adam',
         backcast_loss_ratio=1.0)
 

@@ -50,8 +50,8 @@ def convert_to_time_series_dataset(
         forecast_horizon,
         model_type):
     '''convert to TimeSeriesDataset'''
-    add_relative_time_idx = None
-    static_categoricals = None
+    add_relative_time_idx = False
+    static_categoricals = []
     if model_type == 'tft':
         add_relative_time_idx = True
         static_categoricals = ['group_id']
