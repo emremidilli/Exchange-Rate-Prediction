@@ -4,7 +4,7 @@ cd ../app_training/
 
 CHANNELS=$1
 MODEL_TYPES=$2
-NR_OF_EPOCHS=5
+NR_OF_EPOCHS=$3
 
 for channel in ${CHANNELS[@]}; do
     for model_type in ${MODEL_TYPES[@]}; do
