@@ -43,21 +43,58 @@ def filter_relevant_time_idx(
     return df_to_filter.query('time_idx in @all_ts')
 
 
+def add_date_features(df_to_add, datetime_features, numpy_time_freq):
+    '''
+    Adds date features in the given dataframe.
+    dataframe: pandas dataframe with time_idx in numpy unix format.
+    datetime_features: list of date features
+    numpy_time_freq: numpy frequency of unix format.
+    '''
+
+    df_new = df_to_add.copy()
+
+    time_idx = df_to_add.loc[:, 'time_idx']
+    timestamps = np.array(
+        time_idx,
+        dtype=f'datetime64[{numpy_time_freq}]')
+    timestamps = pd.Series(timestamps, index=df_new.index)
+
+    for feature in datetime_features:
+
+        df_2 = pd.DataFrame(
+            {
+                feature:
+                eval(f'timestamps.dt.{feature}.astype(str).astype("category")')
+            })
+
+        df_new = pd.concat([df_new, df_2], axis=1)
+
+    return df_new
+
+
 def convert_to_time_series_dataset(
         df_train,
         df_test,
         lookback_horizon,
         forecast_horizon,
-        model_type):
-    '''convert to TimeSeriesDataset'''
+        model_type,
+        datetime_features):
+    '''converts to TimeSeriesDataset'''
     add_relative_time_idx = False
     static_categoricals = []
+    time_varying_known_categoricals = []
     if model_type == 'tft':
         add_relative_time_idx = True
         static_categoricals = ['group_id']
-    elif model_type == 'nbeats' or model_type == 'nhits':
+        time_varying_known_categoricals = datetime_features
+    elif model_type == 'nbeats':
         add_relative_time_idx = False
         static_categoricals = []
+        time_varying_known_categoricals = []
+    elif model_type == 'nhits':
+        add_relative_time_idx = False
+        static_categoricals = []
+        time_varying_known_categoricals = datetime_features
 
     ds_train = TimeSeriesDataSet(
         data=df_train,
@@ -73,6 +110,7 @@ def convert_to_time_series_dataset(
         time_varying_unknown_reals=['value'],
         static_categoricals=static_categoricals,
         add_relative_time_idx=add_relative_time_idx,
+        time_varying_known_categoricals=time_varying_known_categoricals
     )
 
     ds_test = TimeSeriesDataSet.from_parameters(
@@ -104,3 +142,19 @@ def get_dataloaders(ds_train, ds_test):
         num_workers=4)
 
     return dl_train, dl_test
+
+
+def save_prediction(pred, dir_to_save):
+    '''
+    saves prediction as a numpy file.
+    pred: prediction file returned by model.predict()
+    dir_to_save: directory to save prediction
+    '''
+    np_pred = np.array(pred['prediction'].cpu())
+
+    if os.path.exists(dir_to_save) is False:
+        os.makedirs(dir_to_save)
+
+    np.save(
+        file=os.path.join(dir_to_save, 'pred'),
+        arr=np_pred)

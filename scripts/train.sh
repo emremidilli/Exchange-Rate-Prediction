@@ -2,9 +2,9 @@
 
 cd ../app_training/
 
-CHANNELS=("EURUSD" "GBPUSD" "USDCAD")
-MODEL_TYPES=("nhits" "nbeats" "tft")
-NR_OF_EPOCHS=1000
+CHANNELS=$1
+MODEL_TYPES=$2
+NR_OF_EPOCHS=5
 
 for channel in ${CHANNELS[@]}; do
     for model_type in ${MODEL_TYPES[@]}; do

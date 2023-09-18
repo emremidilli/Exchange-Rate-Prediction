@@ -13,23 +13,34 @@ def get_training_args():
 
     parser.add_argument(
         '--channel',
-        required=True,
+        required=False,
+        default='EURUSD',
         type=str,
         help='channel'
     )
 
     parser.add_argument(
         '--model_type',
-        required=True,
+        required=False,
+        default='tft',
         type=str,
         help='model_type'
     )
 
     parser.add_argument(
         '--nr_of_epochs',
-        required=True,
+        required=False,
+        default=5,
         type=int,
         help='nr_of_epochs'
+    )
+
+    parser.add_argument(
+        '--hidden_size',
+        required=False,
+        default=32,
+        type=int,
+        help='hidden_size'
     )
 
     try:
